@@ -1,25 +1,51 @@
-# README
+# Disbursement Calculator
 
-This README would normally document whatever steps are necessary to get the
-application up and running.
+## Installation
 
-Things you may want to cover:
+Prerequisites:
 
-* Ruby version
+- Rails 5.2
+- SQLite3
+- Redis
 
-* System dependencies
+```
+        bundle install
+        rails db:create
+        rails db:migrate
+        rails db:seed
+```
 
-* Configuration
+Start server, redis-server and sidekiq:
 
-* Database creation
+```
+        redis-server
+        bundle exec sidekiq
+        rails s
+```
 
-* Database initialization
+Run tests and generate coverage information:
+```
+        SIMPLECOV=true bundle exec rspec
+```
 
-* How to run the test suite
-You can run the tests by executing the following: "bundle exec rspec"
-You can generate test coverage by setting the SIMPLECOV environment variable to true: "SIMPLECOV=true rspec"
-* Services (job queues, cache servers, search engines, etc.)
+## API Reference
 
-* Deployment instructions
+#### Get disburseents
 
-* ...
+```
+    GET /disbursements
+```
+
+| Parameter     | Type      | Description                                                          |
+|---------------|-----------|----------------------------------------------------------------------|
+| `year`        | `integer` | **Required**. Year value                                             |
+| `week`        | `integer` | **Required**. Week value                                             |
+| `merchant_id` | `integer` | Optional. Merchant ID, if not defined, returns for all merchants |
+
+## Technical choices
+
+The main idea here will be to pre-generate disbursements for merchants.
+API requests just return values from the separated table. In this implementation when an API hit does not returns disbursement, a background job will be triggered to generate it. And on the next API call, it will return the prepared value when generated.
+
+## Improvement ideas
+In the future, it can be improved to schedule jobs each Monday night to calculate for the previous week(for example with cron). Also, test coverage and testing needs to be improved as well(e.g. A shared example for sidekiq, its a bit ugly now). I was focusing to create a minimal valuable product under 3 hours, that can fulfill the requirements you gave.
